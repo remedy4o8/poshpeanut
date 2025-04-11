@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remedy's Magic Shopping Cart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" media="print" onload="this.media='all'">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      color: #e2e8f0;
+      font-family: 'Arial', sans-serif;
+      line-height: 1.5;
+      overflow-y: scroll;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #2d2d44;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(240, 98, 146, 0.3);
+      z-index: 10;
+    }
+    h1 { font-size: 1.75rem; color: #d291bc; }
+    h2 { font-size: 1.5rem; color: #d291bc; margin-bottom: 1rem; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 1rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .main { flex: 2; min-width: 0; }
+    .sidebar {
+      flex: 1;
+      position: sticky;
+      top: 5rem;
+      height: calc(100vh - 6rem);
+      min-width: 0;
+    }
+    .cart {
+      background: #2d2d44;
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 4px rgba(240, 98, 146, 0.3);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .intro { margin-bottom: 1rem; }
+    .intro a { color: #d291bc; text-decoration: underline; cursor: pointer; }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+    .product {
+      background: #3c3c5c;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(240, 98, 146, 0.3);
+      transition: transform 0.2s;
+    }
+    .product:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(240, 98, 146, 0.5);
+    }
+    .product img { width: 100%; height: 150px; object-fit: cover; }
+    .product-details { padding: 0.75rem; }
+    .product-title { font-size: 1rem; color: #d291bc; font-weight: bold; margin-bottom: 0.5rem; }
+    .variants { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .size-filter { margin-bottom: 1rem; }
+    .size-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      max-height: 10rem;
+      overflow-y: auto;
+      background: #3c3c5c;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    .size-tag {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      text-align: center;
+      background: #4b4b6b;
+      color: #e2e8f0;
+    }
+    .size-tag.active { background: #d291bc; color: #fff; }
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+    .cart-items li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #3c3c5c;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 4px rgba(240, 98, 146, 0.3);
+    }
+    .cart-items img { width: 2.5rem; height: 2.5rem; border-radius: 50%; }
+    .cart-details { margin-left: 0.75rem; flex-grow: 1; }
+    .cart-title { font-size: 0.875rem; }
+    .cart-size { font-size: 0.75rem; color: #a0aec0; }
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-pink { background: #d291bc; color: #fff; }
+    .btn-pink:hover { background: #e0aaf5; }
+    .btn-red { background: #e3342f; color: #fff; }
+    .btn-red:hover { background: #f56565; }
+    .hidden { display: none; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    .checkbox { display: flex; align-items: center; color: #d291bc; }
+    #notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #f8bbd0;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.5s, background 0.5s;
+      z-index: 1000;
+      font-size: 1rem;
+      max-width: 80%;
+      text-align: center;
+    }
+    .notification-red { background: #e3342f; }
+    .notification-purple { background: #d291bc; }
+    .cart-items::-webkit-scrollbar,
+    .size-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    .cart-items::-webkit-scrollbar-thumb,
+    .size-grid::-webkit-scrollbar-thumb {
+      background: #d291bc;
+      border-radius: 3px;
+    }
+    .cart-items::-webkit-scrollbar-thumb:hover,
+    .size-grid::-webkit-scrollbar-thumb:hover {
+      background: #e0aaf5;
+    }
+    .cart-items::-webkit-scrollbar-track,
+    .size-grid::-webkit-scrollbar-track {
+      background: #2d2d44;
+    }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .main, .sidebar { width: 100%; }
+      .sidebar { position: static; height: auto; }
+      .products { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Remedy's Magic Shopping Cart</h1>
+    <button id="refreshProducts" class="btn-pink"><i class="fas fa-sync-alt"></i> Refresh</button>
+  </header>
+  <div class="container">
+    <div class="main">
+      <div class="intro">
+        <p>Snag your favorite Posh Peanuts before they’re gone! Load up your cart with goodies now, then swing back on release day and hit "View Cart" to check out like a pro! </p>
+      </div>
+      <div id="products" class="products"></div>
+    </div>
+    <div class="sidebar">
+      <div class="cart">
+        <h2>Shopping Cart</h2>
+        <div class="size-filter">
+          <label>Filter by Size:</label>
+          <div id="sizeFilterGrid" class="size-grid"></div>
+          <p style="font-size: 0.75rem; color: #a0aec0; margin-top: 0.25rem;">Click to toggle sizes.</p>
+        </div>
+        <ul id="cartItems" class="cart-items"></ul>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" id="autoCheckout"> Auto Checkout Blankets
+          </label>
+          <div>
+            <button id="cartUrl" class="btn-pink hidden">View Cart</button>
+            <button id="clearCart" class="btn-red">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notificationText"></span>
+  </div>
+  <script>
+    // Helper function for logging with timestamps
+    const log = (message, data = '') => console.log(`[${new Date().toISOString()}] ${message}`, data);
+
+    const shopUrl = "https://poshpeanut.com";
+    let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    let allProducts = [];
+    let selectedSizes = JSON.parse(localStorage.getItem('selectedSizes')) || ["show_all"];
+    const maxPages = 5;
+
+    log('Initial State', { cartItems, selectedSizes });
+
+    const fetchAllProducts = async () => {
+      log('fetchAllProducts: Starting product fetch');
+      const productsDiv = document.getElementById('products');
+      productsDiv.innerHTML = '<div style="text-align: center; padding: 1rem;"><i class="fas fa-spinner fa-spin" style="color: #d291bc; font-size: 2rem;"></i><p style="color: #a0aec0; margin-top: 0.5rem;">Loading products...</p></div>';
+      allProducts = [];
+      const timestamp = Date.now(); // Add timestamp for cache busting
+      const baseUrl = `${shopUrl}/collections/vip-shop-early/products.json?limit=50&page=`;
+
+      for (let page = 1; page <= maxPages; page++) {
+        log(`fetchAllProducts: Fetching page ${page}`);
+        try {
+          const response = await fetch(`${baseUrl}${page}&t=${timestamp}`); // Cache-busting with timestamp
+          log(`fetchAllProducts: Response status for page ${page}`, response.status);
+          if (!response.ok) {
+            log(`fetchAllProducts: Fetch failed for page ${page}, breaking loop`);
+            break;
+          }
+          const data = await response.json();
+          log(`fetchAllProducts: Data received for page ${page}`, data.products?.length);
+          if (!data.products?.length) {
+            log(`fetchAllProducts: No products on page ${page}, breaking loop`);
+            break;
+          }
+          allProducts.push(...data.products);
+          log(`fetchAllProducts: Added ${data.products.length} products, total now ${allProducts.length}`);
+          await new Promise(r => setTimeout(r, 200));
+          log(`fetchAllProducts: Throttling for 200ms after page ${page}`);
+        } catch (e) {
+          log(`fetchAllProducts: Error fetching page ${page}`, e.message);
+          productsDiv.innerHTML = `<div style="color: #e3342f; padding: 1rem;">Error: ${e.message}</div>`;
+          return;
+        }
+      }
+
+      log('fetchAllProducts: Sorting products');
+      allProducts.sort((a, b) => {
+        const keyPhrases = ["cloud blanket", "two-piece short sleeve", "zippy"];
+        const aIndex = keyPhrases.findIndex(p => a.title.toLowerCase().includes(p));
+        const bIndex = keyPhrases.findIndex(p => b.title.toLowerCase().includes(p));
+        log(`fetchAllProducts: Sorting - ${a.title} (${aIndex}) vs ${b.title} (${bIndex})`);
+        return aIndex - bIndex;
+      });
+
+      log('fetchAllProducts: Calling autoAddBlankets');
+      autoAddBlankets();
+      log('fetchAllProducts: Calling displayProducts');
+      displayProducts();
+      log('fetchAllProducts: Fetch complete', { totalProducts: allProducts.length });
+    };
+
+    const autoAddBlankets = () => {
+      log('autoAddBlankets: Starting');
+      const blanketCount = cartItems.filter(i => i.title.toLowerCase().includes("cloud blanket")).length;
+      log('autoAddBlankets: Current blanket count', blanketCount);
+      allProducts.forEach((p, index) => {
+        log(`autoAddBlankets: Checking product ${index}: ${p.title}`);
+        if (p.title.toLowerCase().includes("cloud blanket") && blanketCount < 2 && p.variants?.length && p.images?.length) {
+          const toAdd = Math.min(2 - blanketCount, p.variants.length);
+          log(`autoAddBlankets: Adding ${toAdd} variants for ${p.title}`);
+          for (let i = 0; i < toAdd; i++) {
+            log(`autoAddBlankets: Adding variant ${i + 1} of ${p.title}`);
+            addVariantToCart(p.title, p.variants[i].id, p.variants[i].option1, p.variants[i].option2, p.images[0].src);
+          }
+        } else {
+          log(`autoAddBlankets: Skipping ${p.title} - Conditions not met`);
+        }
+      });
+      log('autoAddBlankets: Complete');
+    };
+
+    const displayProducts = () => {
+      log('displayProducts: Starting');
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+      const filtered = selectedSizes.includes("show_all") ? allProducts : allProducts.filter(p => p.variants.some(v => selectedSizes.includes(v.option1)));
+      log('displayProducts: Filtered products', { total: filtered.length, selectedSizes });
+
+      filtered.forEach((p, index) => {
+        log(`displayProducts: Rendering product ${index}: ${p.title}`);
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <img src="${p.images[0]?.src || 'placeholder.jpg'}" alt="${p.title}" loading="lazy">
+          <div class="product-details">
+            <div class="product-title">${p.title} $${p.variants[0].price}</div>
+            <div class="variants"></div>
+          </div>`;
+        const variants = div.querySelector('.variants');
+        p.variants.forEach((v, vIndex) => {
+          if (selectedSizes.includes("show_all") || selectedSizes.includes(v.option1)) {
+            log(`displayProducts: Adding variant ${vIndex} for ${p.title}: ${v.option1}`);
+            const btn = document.createElement('button');
+            btn.className = 'btn-pink';
+            btn.textContent = v.option1;
+            btn.onclick = () => {
+              log(`displayProducts: Button clicked for ${p.title}, variant ${v.option1}`);
+              addVariantToCart(p.title, v.id, v.option1, v.option2, p.images[0].src);
+            };
+            variants.appendChild(btn);
+          }
+        });
+        container.appendChild(div);
+      });
+      log('displayProducts: Complete', { rendered: filtered.length });
+    };
+
+    const addVariantToCart = (title, variantId, size, color, imageUrl) => {
+      log('addVariantToCart: Starting', { title, variantId, size, color, imageUrl });
+      const blanketCount = cartItems.filter(i => i.title.toLowerCase().includes("cloud blanket")).length;
+      if (title.toLowerCase().includes("cloud blanket") && blanketCount >= 2) {
+        log('addVariantToCart: Blocked - Max 2 cloud blankets');
+        showNotification('Error', 'You cannot add more than two cloud blankets.', 'red');
+        return;
+      }
+      cartItems.push({ title, variantId, size, color, imageUrl });
+      log('addVariantToCart: Item added to cart', cartItems);
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      log('addVariantToCart: Updated localStorage');
+      updateCartList();
+      showNotification('Added', `Added to cart: ${title}`, 'purple');
+      const autoCheckout = localStorage.getItem('autoCheckout') === 'true';
+      log('addVariantToCart: AutoCheckout status', autoCheckout);
+      if (autoCheckout && cartItems.filter(i => i.title.toLowerCase().includes("cloud blanket")).length >= 2) {
+        log('addVariantToCart: Triggering auto checkout');
+        proceedToCheckout();
+      }
+      log('addVariantToCart: Complete');
+    };
+
+    const updateCartList = () => {
+      log('updateCartList: Starting');
+      const cartList = document.getElementById('cartItems');
+      cartList.innerHTML = cartItems.map((item, i) => {
+        log(`updateCartList: Rendering cart item ${i}: ${item.title}`);
+        return `
+          <li>
+            <div style="display: flex; align-items: center;">
+              <img src="${item.imageUrl}" alt="Product" loading="lazy">
+              <div class="cart-details">
+                <p class="cart-title">${item.title}</p>
+                <p class="cart-size">Size: ${item.size}</p>
+              </div>
+            </div>
+            <button class="btn-red" onclick="removeItemFromCart(${i})">Remove</button>
+          </li>`;
+      }).join('');
+      log('updateCartList: Cart list updated', { itemCount: cartItems.length });
+      toggleCartVisibility();
+      log('updateCartList: Complete');
+    };
+
+    const removeItemFromCart = index => {
+      log('removeItemFromCart: Starting', { index });
+      const removedItem = cartItems[index];
+      cartItems.splice(index, 1);
+      log('removeItemFromCart: Item removed', { removedItem, newCart: cartItems });
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      log('removeItemFromCart: Updated localStorage');
+      updateCartList();
+      showNotification('Removed', 'Item removed from cart.', 'red');
+      log('removeItemFromCart: Complete');
+    };
+
+    const toggleCartVisibility = () => {
+      log('toggleCartVisibility: Starting');
+      const cartLink = document.getElementById('cartUrl');
+      const isHidden = !cartItems.length;
+      cartLink.classList.toggle('hidden', isHidden);
+      log('toggleCartVisibility: Cart link visibility', { isHidden });
+      if (cartItems.length) {
+        const url = `${shopUrl}/cart/${cartItems.map(i => `${i.variantId}:1`).join(',')}?discount=lsvip`;
+        log('toggleCartVisibility: Generated cart URL', url);
+        cartLink.onclick = () => {
+          log('toggleCartVisibility: Cart URL clicked', url);
+          window.open(url, '_blank');
+        };
+      }
+      log('toggleCartVisibility: Complete');
+    };
+
+    const proceedToCheckout = () => {
+      log('proceedToCheckout: Starting');
+      const url = `${shopUrl}/cart/${cartItems.map(i => `${i.variantId}:1`).join(',')}?discount=lsvip`;
+      log('proceedToCheckout: Opening URL', url);
+      window.open(url, '_blank');
+      cartItems = [];
+      log('proceedToCheckout: Cart cleared', cartItems);
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      log('proceedToCheckout: Updated localStorage');
+      updateCartList();
+      log('proceedToCheckout: Complete');
+    };
+
+    const showNotification = (action, message, color) => {
+      log('showNotification: Starting', { action, message, color });
+      const n = document.getElementById('notification');
+      n.style.opacity = 1;
+      document.getElementById('notificationText').textContent = message;
+      n.className = color === 'red' ? 'notification-red' : 'notification-purple';
+      log('showNotification: Notification displayed');
+      setTimeout(() => {
+        n.style.opacity = 0;
+        log('showNotification: Notification hidden');
+      }, 2500);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      log('DOM Loaded: Initializing');
+      fetchAllProducts();
+      updateCartList();
+
+      const sizes = ["show_all", "Preemie", "Newborn", "0-3 months", "3-6 months", "6-12 months", "12-18 months", "18-24 months", "2T", "3T", "4T", "5/6", "7/8", "9/10", "12/14", "16", "XS", "S", "M", "L", "XL", "XXL", "3XL", "Mini Crib", "Standard Crib", "Default Title", "Newborn - 3T"];
+      const sizeGrid = document.getElementById('sizeFilterGrid');
+      log('DOM Loaded: Generating size filters', { sizes });
+      sizes.forEach((size, index) => {
+        log(`DOM Loaded: Creating size tag ${index}: ${size}`);
+        const tag = document.createElement('span');
+        tag.className = `size-tag ${selectedSizes.includes(size) ? 'active' : ''}`;
+        tag.textContent = size;
+        tag.onclick = () => {
+          log(`Size Filter Clicked: ${size}`);
+          selectedSizes = size === "show_all" ? ["show_all"] : selectedSizes.filter(s => s !== "show_all").includes(size) ? selectedSizes.filter(s => s !== size) : [...selectedSizes.filter(s => s !== "show_all"), size];
+          log('Size Filter: Updated selectedSizes', selectedSizes);
+          localStorage.setItem('selectedSizes', JSON.stringify(selectedSizes));
+          log('Size Filter: Updated localStorage');
+          sizeGrid.querySelectorAll('.size-tag').forEach(s => {
+            const isActive = selectedSizes.includes(s.textContent);
+            s.classList.toggle('active', isActive);
+            log(`Size Filter: Toggling ${s.textContent} to ${isActive ? 'active' : 'inactive'}`);
+          });
+          displayProducts();
+        };
+        sizeGrid.appendChild(tag);
+      });
+
+      document.getElementById('clearCart').onclick = () => {
+        log('Clear Cart Clicked');
+        cartItems = [];
+        log('Clear Cart: Cart cleared', cartItems);
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        log('Clear Cart: Updated localStorage');
+        updateCartList();
+        showNotification('Cleared', 'All items have been removed from the cart.', 'red');
+      };
+
+      const autoCheckout = document.getElementById('autoCheckout');
+      autoCheckout.checked = localStorage.getItem('autoCheckout') === 'true';
+      log('DOM Loaded: AutoCheckout initial state', autoCheckout.checked);
+      autoCheckout.onchange = () => {
+        log('AutoCheckout Changed', autoCheckout.checked);
+        localStorage.setItem('autoCheckout', autoCheckout.checked);
+        log('AutoCheckout: Updated localStorage');
+      };
+
+      document.getElementById('refreshProducts').onclick = () => {
+        log('Refresh Products Clicked');
+        fetchAllProducts();
+      };
+
+      log('DOM Loaded: Initialization complete');
+    });
+  </script>
+</body>
+</html>
