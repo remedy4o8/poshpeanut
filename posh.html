@@ -6,7 +6,7 @@
   <title>Remedy's Magic Shopping Cart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" media="print" onload="this.media='all'">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }x
     body {
       background: #1a1a2e;
       color: #e2e8f0;
@@ -393,7 +393,7 @@
       cartLink.classList.toggle('hidden', isHidden);
       log('toggleCartVisibility: Cart link visibility', { isHidden });
       if (cartItems.length) {
-        const url = `${shopUrl}/cart/${cartItems.map(i => `${i.variantId}:1`).join(',')}?discount=lsvip`;
+        const url = `${shopUrl}/cart/${cartItems.map(i => `${i.variantId}:1`).join(',')}?discount=SPRING15`;
         log('toggleCartVisibility: Generated cart URL', url);
         cartLink.onclick = () => {
           log('toggleCartVisibility: Cart URL clicked', url);
